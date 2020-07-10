@@ -21,7 +21,9 @@ pip install -r requirements.txt
 ## To Start from Scratch
 
 cd
+
 rm -rf .twilio-cli
+
 ./start.sh
 
 ## To Append Subaccounts
