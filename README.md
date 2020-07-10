@@ -20,9 +20,7 @@ pip install -r requirements.txt
 
 ## To Start from Scratch
 
-cd
-
-rm -rf .twilio-cli
+./delete.sh (Be Careful here!)
 
 ./start.sh
 
