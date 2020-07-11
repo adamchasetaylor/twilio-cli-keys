@@ -10,8 +10,10 @@ TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
 TWILIO_CLI_CONFIG = os.getenv('TWILIO_CLI_CONFIG')
 
+# Force the creation of .twilio-cli if it is missing
 os.system('twilio profiles:list -l debug')
 
+# Read Existing Config, or template New Config
 try:
   f = open(TWILIO_CLI_CONFIG)
 except IOError:
@@ -37,8 +39,7 @@ def checkConfigParent(cli_config,friendly_name):
       return True
   return False
 
-
-def createParentAuth(sid,friendly_name):
+def createAuth(sid,friendly_name):
   if checkConfigParent(cli_config,friendly_name):
     print("Key Already Exists in Config")
   else:
@@ -62,23 +63,29 @@ def createKey(myclient,sid,friendly_name):
     keyring.set_password("twilio-cli", friendly_name, mykey)
     updateConfig(cli_config,sid,friendly_name)
 
+# Pull Accounts from ACCOUNT_SID
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 accounts = client.api.accounts.list(status='active', limit=20)
 
 for record in accounts:
 
   if TWILIO_ACCOUNT_SID == record.sid:
-    friendly_name = record.friendly_name
+    friendly_name = f"{record.friendly_name}_PARENT_APIKEY"
     myclient = client
-    parentaccount_name = f"{record.friendly_name} ACCOUNT/TOKEN"
-    createParentAuth(record.sid,parentaccount_name)
+    parentaccount_name = f"{record.friendly_name}_PARENT_AUTHTOKEN"
+    # Create Key & Auth for Parent Account
+    createKey(myclient,record.sid,friendly_name)
+    createAuth(record.sid,parentaccount_name)
   else:
     print("https://www.twilio.com/console/project/subaccounts")
-    friendly_name = f"{record.friendly_name} SUBACCOUNT"
+    friendly_name = f"{record.friendly_name}_CHILD_APIKEY"
     token=getpass.getpass(f"enter token for \"{record.friendly_name}\":")
     myclient = Client(record.sid,token)
+    childaccount_name = f"{record.friendly_name}_CHILD_AUTHTOKEN"
+    # Create Key & Auth for Child Account
+    createKey(myclient,record.sid,friendly_name)
+    createAuth(record.sid,childaccount_name)
 
-  createKey(myclient,record.sid,friendly_name)
-
+  # Write this in the Config File
   with open(TWILIO_CLI_CONFIG, 'w') as fp:
     json.dump(cli_config, fp)
