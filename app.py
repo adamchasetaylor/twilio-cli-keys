@@ -31,6 +31,23 @@ def checkConfig(cli_config,sid):
       return True
   return False
 
+def checkConfigParent(cli_config,friendly_name):
+  for project in cli_config['projects']:
+    if project['id'] == friendly_name:
+      return True
+  return False
+
+
+def createParentAuth(sid,friendly_name):
+  if checkConfigParent(cli_config,friendly_name):
+    print("Key Already Exists in Config")
+  else:
+    print("FRIENDLY_NAME",friendly_name)
+    print("ACCOUNT_SID",sid)
+    mykey = f"{TWILIO_ACCOUNT_SID}|{TWILIO_AUTH_TOKEN}"
+    keyring.set_password("twilio-cli", friendly_name, mykey)
+    updateConfig(cli_config,sid,friendly_name)
+
 def createKey(myclient,sid,friendly_name):
   if checkConfig(cli_config,sid):
     print("Key Already Exists in Config")
@@ -53,6 +70,8 @@ for record in accounts:
   if TWILIO_ACCOUNT_SID == record.sid:
     friendly_name = record.friendly_name
     myclient = client
+    parentaccount_name = f"{record.friendly_name} ACCOUNT/TOKEN"
+    createParentAuth(record.sid,parentaccount_name)
   else:
     print("https://www.twilio.com/console/project/subaccounts")
     friendly_name = f"{record.friendly_name} SUBACCOUNT"
