@@ -1,4 +1,4 @@
-# twilio-cli-keys
+# twilio-cli-keys (macos)
 
 Environment variables must be configured in your .env file.
 
